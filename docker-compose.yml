@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # Nginx (リバースプロキシ)
+  nginx:
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    container_name: todo-nginx-2025
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - todo-network
+
+  # React Frontend (最新版)
+  frontend:
+    build:
+      context: ./docker/frontend
+      dockerfile: Dockerfile
+    container_name: todo-frontend-2025
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - VITE_API_URL=http://localhost/api
+    stdin_open: true
+    tty: true
+    networks:
+      - todo-network
+
+  # Laravel Backend (最新版)
+  backend:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: todo-backend-2025
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_DATABASE=todo_app
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - APP_ENV=local
+      - APP_DEBUG=true
+    networks:
+      - todo-network
+
+  # MySQL 8.0 (最新版)
+  db:
+    image: mysql:8.0
+    container_name: todo-db-2025
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: todo_app
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - todo-network
+
+volumes:
+  db_data:
+  frontend_node_modules:
+
+networks:
+  todo-network:
+    driver: bridge

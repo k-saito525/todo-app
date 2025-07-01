@@ -1,0 +1,1 @@
+Route::get('/health', fn () => response()->json(['status' => 'ok']));
