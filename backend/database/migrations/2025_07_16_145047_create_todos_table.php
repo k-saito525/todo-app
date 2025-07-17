@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('todos', function (Blueprint $table) {
             $table->id()->comment('ID');
+            $table->integer('user_id')->default(0)->nullable(false)->comment('会員ID');
             $table->string('title', length: 100)->default('')->nullable(false)->comment('タイトル');
             $table->string('body', length: 1000)->default('')->nullable(false)->comment('本文');
             $table->integer('status')->default(0)->nullable(false)->comment('ステータス');
